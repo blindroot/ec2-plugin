@@ -116,7 +116,7 @@ public class EC2UnixLauncher extends EC2ComputerLauncher {
             logger.println("Creating tmp directory (" + tmpDir + ") if it does not exist");
             conn.exec("mkdir -p " + tmpDir, logger);
 
-            if(initScript!=null && initScript.trim().length()>0) {
+            if(initScript!=null && initScript.trim().length()>0 && conn.exec("test -e ~/.hudson-run-init", logger) !=0) {
                 logger.println("Executing init script");
                 scp.put(initScript.getBytes("UTF-8"),"init.sh",tmpDir,"0700");
                 Session sess = conn.openSession();
@@ -137,6 +137,7 @@ public class EC2UnixLauncher extends EC2ComputerLauncher {
                 // Needs a tty to run sudo.
                 sess = conn.openSession();
                 sess.requestDumbPTY(); // so that the remote side bundles stdout and stderr
+                sess.execCommand(buildUpCommand(computer, "touch ~/.hudson-run-init"));
                 sess.close();
             }
 
